@@ -5,12 +5,14 @@ import structlog
 import tenacity
 
 from aiogram import Dispatcher, Bot
+from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from aiogram.fsm.storage.redis import RedisStorage
 from aiohttp import web
+from orjson import orjson
 from redis.asyncio import Redis
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +22,7 @@ from src.data.config import *
 from src.middlewares.logging import StructLoggingMiddleware
 from src.utils.logging import setup_logger
 from src.utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
+from src.utils.smart_session import SmartAiogramAiohttpSession
 
 
 async def aiogram_on_startup_webhook():
@@ -123,7 +126,12 @@ async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot) -> None:
 
 
 def main() -> None:
-    bot = Bot(BOT_TOKEN)
+    aiogram_session_logger = setup_logger().bind(type="aiogram_session")
+    session = SmartAiogramAiohttpSession(
+        json_loads=orjson.loads,
+        logger=aiogram_session_logger,
+    )
+    bot = Bot(token=BOT_TOKEN, session=session, default=DefaultBotProperties(parse_mode='HTML'))
     if REDIS_STATUS:
         storage = MemoryStorage()
     else:
@@ -135,7 +143,6 @@ def main() -> None:
                 db=0,
             ))
     dp = Dispatcher(key_builder=DefaultKeyBuilder(with_bot_id=True), storage=storage)
-    aiogram_session_logger = setup_logger().bind(type="aiogram_session")
     dp["aiogram_session_logger"] = aiogram_session_logger
     if config.USE_WEBHOOK:
         dp.startup.register(aiogram_on_startup_webhook)
