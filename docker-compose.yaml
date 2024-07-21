@@ -1,0 +1,38 @@
+version: "2.26.1"
+
+services:
+  love_bot_aiogram:
+    container_name: love_bot_aiogram
+    working_dir: /love_bot_aiogram
+    restart: always
+    networks:
+      - backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "python3 run.py"
+  postgres:
+    image: postgres:latest
+    container_name: love_bot_postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    networks:
+      - backend
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+
+  redis:
+    image: redis:5.0.5
+    container_name: redis
+    restart: always
+    networks:
+      - backend
+    ports:
+      - '6379:6379'
+
+networks:
+  backend:
+    driver: bridge
