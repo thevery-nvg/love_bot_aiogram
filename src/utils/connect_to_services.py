@@ -71,8 +71,8 @@ async def wait_postgres(
         user=user,
         password=password,
         database=database,
-        min_size=1,
-        max_size=3,
+        min_size=10,
+        max_size=20,
     )
     version = await db_pool.fetchrow("SELECT version() as ver;")
     logger.debug("Connected to PostgreSQL.", version=version["ver"])
@@ -115,7 +115,7 @@ async def wait_sqlalchemy(
         logger: structlog.typing.FilteringBoundLogger,
         database_url: str = DATABASE_URL,
 ) -> AsyncSession:
-    engine = create_async_engine(database_url, pool_size=5, max_overflow=10)
+    engine = create_async_engine(database_url, pool_size=15, max_overflow=10)
     async_session = async_sessionmaker(bind=engine)
     logger.debug("Connected to SQLAlchemy database.")
     return async_session()

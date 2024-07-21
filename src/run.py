@@ -1,4 +1,6 @@
 import asyncio
+from typing import Awaitable
+
 import structlog
 import tenacity
 
@@ -8,15 +10,28 @@ from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from aiogram.fsm.storage.redis import RedisStorage
+from aiohttp import web
 from redis.asyncio import Redis
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.data import config
-from src.data.config import BOT_TOKEN, REDIS_STATUS
+from src.data.config import *
 from src.middlewares.logging import StructLoggingMiddleware
 from src.utils.logging import setup_logger
 from src.utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
+
+
+async def aiogram_on_startup_webhook():
+    ...
+
+
+async def aiogram_on_shutdown_webhook():
+    ...
+
+
+async def setup_aiohttp_app(bot: Bot, dp: Dispatcher) -> Awaitable:
+    ...
 
 
 async def create_db_connections(dp: Dispatcher) -> None:
@@ -78,7 +93,8 @@ def setup_handlers(dp: Dispatcher) -> None:
 def setup_logging(dp: Dispatcher) -> None:
     dp["aiogram_logger"] = setup_logger().bind(type="aiogram")
     dp["db_logger"] = setup_logger().bind(type="db")
-    # dp["cache_logger"] = setup_logger().bind(type="cache")
+    if config.USE_CACHE:
+        dp["cache_logger"] = setup_logger().bind(type="cache")
     # dp["business_logger"] = setup_logger().bind(type="business")
 
 
@@ -121,8 +137,19 @@ def main() -> None:
     dp = Dispatcher(key_builder=DefaultKeyBuilder(with_bot_id=True), storage=storage)
     aiogram_session_logger = setup_logger().bind(type="aiogram_session")
     dp["aiogram_session_logger"] = aiogram_session_logger
-    dp.startup.register(aiogram_on_startup_polling)
-    dp.shutdown.register(aiogram_on_shutdown_polling)
+    if config.USE_WEBHOOK:
+        dp.startup.register(aiogram_on_startup_webhook)
+        dp.shutdown.register(aiogram_on_shutdown_webhook)
+        web.run_app(
+            asyncio.run(setup_aiohttp_app(bot, dp)),
+            handle_signals=True,
+            host=config.MAIN_WEBHOOK_LISTENING_HOST,
+            port=config.MAIN_WEBHOOK_LISTENING_PORT,
+        )
+    else:
+        dp.startup.register(aiogram_on_startup_polling)
+        dp.shutdown.register(aiogram_on_shutdown_polling)
+
     asyncio.run(dp.start_polling(bot))
 
 

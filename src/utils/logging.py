@@ -8,6 +8,7 @@ from src.data import config
 
 
 def setup_logger() -> structlog.typing.FilteringBoundLogger:
+
     logging.basicConfig(
         level=config.LOGGING_LEVEL,
         stream=sys.stdout,

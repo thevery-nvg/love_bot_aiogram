@@ -17,6 +17,7 @@ asyncpg = "^0.29.0"
 psycopg2 = "^2.9.9"
 redis = "^5.0.7"
 tenacity = "^8.5.0"
+aiojobs = "^1.2.1"
 
 
 [build-system]
