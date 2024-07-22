@@ -1,5 +1,4 @@
 import asyncio
-from typing import Awaitable
 
 import structlog
 import tenacity
@@ -11,7 +10,6 @@ from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from aiogram.fsm.storage.redis import RedisStorage
-from aiohttp import web
 from orjson import orjson
 from redis.asyncio import Redis
 
@@ -23,18 +21,6 @@ from src.middlewares.logging import StructLoggingMiddleware
 from src.utils.logging import setup_logger
 from src.utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
 from src.utils.smart_session import SmartAiogramAiohttpSession
-
-
-async def aiogram_on_startup_webhook():
-    ...
-
-
-async def aiogram_on_shutdown_webhook():
-    ...
-
-
-async def setup_aiohttp_app(bot: Bot, dp: Dispatcher) -> Awaitable:
-    ...
 
 
 async def create_db_connections(dp: Dispatcher) -> None:
@@ -132,7 +118,7 @@ def main() -> None:
         logger=aiogram_session_logger,
     )
     bot = Bot(token=BOT_TOKEN, session=session, default=DefaultBotProperties(parse_mode='HTML'))
-    if REDIS_STATUS:
+    if not REDIS_FSM_ON:
         storage = MemoryStorage()
     else:
         storage = RedisStorage(
@@ -144,19 +130,8 @@ def main() -> None:
             ))
     dp = Dispatcher(key_builder=DefaultKeyBuilder(with_bot_id=True), storage=storage)
     dp["aiogram_session_logger"] = aiogram_session_logger
-    if config.USE_WEBHOOK:
-        dp.startup.register(aiogram_on_startup_webhook)
-        dp.shutdown.register(aiogram_on_shutdown_webhook)
-        web.run_app(
-            asyncio.run(setup_aiohttp_app(bot, dp)),
-            handle_signals=True,
-            host=config.MAIN_WEBHOOK_LISTENING_HOST,
-            port=config.MAIN_WEBHOOK_LISTENING_PORT,
-        )
-    else:
-        dp.startup.register(aiogram_on_startup_polling)
-        dp.shutdown.register(aiogram_on_shutdown_polling)
-
+    dp.startup.register(aiogram_on_startup_polling)
+    dp.shutdown.register(aiogram_on_shutdown_polling)
     asyncio.run(dp.start_polling(bot))
 
 

@@ -20,7 +20,7 @@ if USE_CACHE:
 FSM_HOST: str = env.str("FSM_HOST")
 FSM_PORT: int = env.int("FSM_PORT")
 FSM_PASSWORD: str = env.str("FSM_PASSWORD")
-REDIS_STATUS: bool = env.bool("REDIS_STATUS", False)
+REDIS_FSM_ON: bool = env.bool("REDIS_FSM_ON", False)
 USE_WEBHOOK: bool = env.bool("USE_WEBHOOK", False)
 
 MAIN_WEBHOOK_LISTENING_PORT: int = env.int("MAIN_WEBHOOK_LISTENING_PORT")
