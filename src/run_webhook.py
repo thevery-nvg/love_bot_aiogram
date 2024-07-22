@@ -1,4 +1,3 @@
-import asyncio
 from aiogram import Dispatcher, Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.base import DefaultKeyBuilder
@@ -21,7 +20,6 @@ app = FastAPI()
 
 @dataclass
 class BotState:
-    # TODO: Вот нужно что то другое придумать
     bot: Bot = field(default=None)
     dp: Dispatcher = field(default=None)
     scheduler: aiojobs.Scheduler = field(default=None)
@@ -56,10 +54,10 @@ async def on_startup() -> None:
 
     bot_state.bot = bot
     bot_state.dp = dp
+    bot_state.scheduler = aiojobs.Scheduler()
 
     await dp.emit_startup()
 
-    bot_state.scheduler = aiojobs.Scheduler()
     # await bot_state.scheduler.spawn(background_task())
 
 

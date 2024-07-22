@@ -4,6 +4,7 @@ import structlog
 import tenacity
 from redis.asyncio import ConnectionPool, Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import text
 
 from tenacity import _utils
 
@@ -117,5 +118,7 @@ async def wait_sqlalchemy(
 ) -> AsyncSession:
     engine = create_async_engine(database_url, pool_size=15, max_overflow=10)
     async_session = async_sessionmaker(bind=engine)
-    logger.debug("Connected to SQLAlchemy database.")
+    async with async_session() as s:
+        version = await s.execute(text("SELECT version() as ver;"))
+    logger.debug("Connected to SQLAlchemy database.", version=version.first())
     return async_session()
