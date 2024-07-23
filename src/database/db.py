@@ -1,3 +1,4 @@
+from geoalchemy2 import WKTElement
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, func, select
 from sqlalchemy.dialects.postgresql import insert
@@ -27,6 +28,19 @@ async def find_nearby_users(lat: float, lon: float, radius_km: float, session: A
         )
         nearby_users = result.scalars().all()
     return nearby_users
+
+
+async def add_location(user_id: int, lat_str: str, lon_str: str, session: AsyncSession):
+    lat = float(lat_str)
+    lon = float(lon_str)
+    location_wkt = f'POINT({lon} {lat})'
+
+    async with session.begin():
+        location = Location(
+            user_id=user_id,
+            location=WKTElement(location_wkt, srid=4326)
+        )
+        session.add(location)
 
 
 async def get_userdata_by_id(user_id: int, session: AsyncSession):
