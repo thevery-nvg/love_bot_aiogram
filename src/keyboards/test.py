@@ -1,3 +1,5 @@
+from enum import Enum
+
 from aiogram.filters.callback_data import CallbackData
 
 from src.keyboards.base import InlineConstructor
@@ -14,13 +16,24 @@ class ExampleCallbackData(CallbackData, prefix="example"):
     value: int
 
 
+class Action(str, Enum):
+    ban = "ban"
+    kick = "kick"
+    warn = "warn"
+
+
+class AdminAction(CallbackData, prefix="adm"):
+    action: Action
+    value: int
+
+
 # Пример данных для кнопок
 
 actions = [
-    {"text": "Button 1", "cb": ExampleCallbackData(action="action", value=1)},
-    {"text": "Button 1", "cb": ExampleCallbackData(action="action", value=2)},
-    {"text": "Button 1", "cb": ExampleCallbackData(action="action", value=3)},
-    {"text": "Button 1", "cb": ExampleCallbackData(action="action", value=4)},
+    {"text": "Button 1", "cb": AdminAction(action=Action.ban, value=1)},
+    {"text": "Button 2", "cb": ExampleCallbackData(action="action", value=2)},
+    {"text": "Button 3", "cb": ExampleCallbackData(action="action", value=3)},
+    {"text": "Button 4", "cb": ExampleCallbackData(action="action", value=4)},
     # {"text": "Button 2", "url": "https://google.com"},
     # {"text": "Button 3", "login_url": LoginUrl(url="https://example.com/login")},
     # {"text": "Button 4", "callback_game": CallbackGame()},

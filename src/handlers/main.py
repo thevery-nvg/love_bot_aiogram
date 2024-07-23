@@ -1,5 +1,5 @@
 from aiogram import html, types, Bot, Router, F
-from src.keyboards.test import keyboard, ExampleCallbackData
+from src.keyboards.test import keyboard, ExampleCallbackData, AdminAction, Action
 from aiogram.filters import CommandStart
 
 main_router = Router()
@@ -16,7 +16,8 @@ async def start(msg: types.Message, bot: Bot) -> None:
     await bot.send_message(msg.from_user.id, "keyboard", reply_markup=keyboard)
 
 
-@main_router.callback_query(F.data == ExampleCallbackData(action="action", value=1).pack())
+@main_router.callback_query(AdminAction.filter(F.action == Action.ban), AdminAction.filter(
+    F.value == 1))
 async def ac1(msg: types.Message, bot: Bot) -> None:
     await bot.send_message(msg.from_user.id, "-----------BUTTON 1 Pressed-------------")
 
