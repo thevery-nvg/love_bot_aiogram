@@ -11,7 +11,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 import orjson
 from dataclasses import dataclass, field
 
-from src.utils.smart_session import SmartAiogramAiohttpSession
+from utils.smart_session import SmartAiogramAiohttpSession
 import aiojobs
 from run_polling import setup_aiogram
 

@@ -1,7 +1,7 @@
 from environs import Env
 
 env = Env()
-env.read_env(path="D:\\Python\\love_bot_aiogram\\.env.dist")
+env.read_env(path="D:\\Python\\love_bot_aiogram\\.env")
 BOT_TOKEN: str = env.str("BOT_TOKEN")
 LOGGING_LEVEL: int = env.int("LOGGING_LEVEL", 10)
 

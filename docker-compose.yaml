@@ -3,7 +3,7 @@ version: "2.26.1"
 services:
   love_bot_aiogram:
     container_name: love_bot_aiogram
-    working_dir: /love_bot_aiogram
+    working_dir: /src
     restart: always
     networks:
       - backend
@@ -20,9 +20,9 @@ services:
     networks:
       - backend
     environment:
-      POSTGRES_DB: "postgres"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: ${PG_DATABASE}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
 
   redis:
     image: redis:5.0.5

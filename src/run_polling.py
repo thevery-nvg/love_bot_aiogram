@@ -15,12 +15,12 @@ from redis.asyncio import Redis
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.data import config
-from src.data.config import *
-from src.middlewares.logging import StructLoggingMiddleware
-from src.utils.logging import setup_logger
-from src.utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
-from src.utils.smart_session import SmartAiogramAiohttpSession
+from data import config
+from data.config import *
+from middlewares.logging import StructLoggingMiddleware
+from utils.logging import setup_logger
+from utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
+from utils.smart_session import SmartAiogramAiohttpSession
 
 
 async def create_db_connections(dp: Dispatcher) -> None:
@@ -75,8 +75,9 @@ def setup_middlewares(dp: Dispatcher) -> None:
 
 
 def setup_handlers(dp: Dispatcher) -> None:
-    # dp.include_router()
-    ...
+    from src.handlers.main import main_router
+    dp.include_router(main_router)
+
 
 
 def setup_logging(dp: Dispatcher) -> None:
@@ -84,7 +85,7 @@ def setup_logging(dp: Dispatcher) -> None:
     dp["db_logger"] = setup_logger().bind(type="db")
     if config.USE_CACHE:
         dp["cache_logger"] = setup_logger().bind(type="cache")
-    # dp["business_logger"] = setup_logger().bind(type="business")
+    dp["business_logger"] = setup_logger().bind(type="business")
 
 
 async def setup_aiogram(dp: Dispatcher) -> None:
