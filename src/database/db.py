@@ -1,3 +1,4 @@
+from aiogram import Dispatcher
 from geoalchemy2 import WKTElement
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, func, select
@@ -9,7 +10,7 @@ from src.database.models import User, Base, Location, Questionary, City
 async def add_user_if_not_exists(user_id: int, username: str, session: AsyncSession):
     async with session.begin():
         stmt = insert(User).values(id=user_id, username=username)
-        stmt = stmt.on_conflict_do_nothing(index_elements=['id'])
+        stmt = stmt.on_conflict_do_nothing(index_elements=['user_id'])
         await session.execute(stmt)
 
 
@@ -71,8 +72,3 @@ async def get_all_users_raw(session: AsyncSession):
     async with session.begin():
         result = await session.execute(text("select * from users"))
     return result.all()
-
-
-async def init_db(session: AsyncSession):
-    async with session.begin():
-        await session.run_sync(Base.metadata.create_all)

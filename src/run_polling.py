@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from data import config
 from data.config import *
 from middlewares.logging import StructLoggingMiddleware
+from src import database
 from utils.logging import setup_logger
 from utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
 from utils.smart_session import SmartAiogramAiohttpSession
@@ -36,7 +37,6 @@ async def create_db_connections(dp: Dispatcher) -> None:
     else:
         logger.debug("Succesfully connected to SQLAlchemy[PostgreSQL]", db="main")
     dp["db_pool"] = db_pool
-
     if config.USE_CACHE:
         logger.debug("Connecting to Redis")
         try:
@@ -72,12 +72,13 @@ async def close_db_connections(dp: Dispatcher) -> None:
 
 def setup_middlewares(dp: Dispatcher) -> None:
     dp.update.outer_middleware(StructLoggingMiddleware(logger=dp["aiogram_logger"]))
+    if config.USE_CACHE:
+        dp.update.outer_middleware(StructLoggingMiddleware(logger=dp["cache_logger"]))
 
 
 def setup_handlers(dp: Dispatcher) -> None:
     from src.handlers.main import main_router
     dp.include_router(main_router)
-
 
 
 def setup_logging(dp: Dispatcher) -> None:
@@ -95,6 +96,7 @@ async def setup_aiogram(dp: Dispatcher) -> None:
     await create_db_connections(dp)
     setup_handlers(dp)
     setup_middlewares(dp)
+
     logger.info("Configured aiogram")
 
 
@@ -133,6 +135,7 @@ def main() -> None:
     dp["aiogram_session_logger"] = aiogram_session_logger
     dp.startup.register(aiogram_on_startup_polling)
     dp.shutdown.register(aiogram_on_shutdown_polling)
+
     asyncio.run(dp.start_polling(bot))
 
 

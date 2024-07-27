@@ -9,7 +9,7 @@ class DeleteLastMsgMiddleware(BaseMiddleware):
             handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
             event: Message,
             data: Dict[str, Any],
-                        ) -> Any:
+    ) -> Any:
         chat_id = data['event_chat']
         bot = data['bot']
         dp = data['dp']
@@ -21,3 +21,6 @@ class DeleteLastMsgMiddleware(BaseMiddleware):
             except Exception as e:
                 dp['aiogram_logger'].debug(f"Error occurred while deleting a message: {e}")
         return await handler(event, data)
+
+
+

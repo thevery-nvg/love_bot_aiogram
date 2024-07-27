@@ -4,7 +4,7 @@ import structlog
 import tenacity
 from redis.asyncio import ConnectionPool, Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
 
 from tenacity import _utils
 
