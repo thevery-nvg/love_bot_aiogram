@@ -24,11 +24,11 @@ class User(Base):
     username: Mapped[str] = mapped_column(String, unique=True)
 
     age: Mapped[int] = mapped_column(Integer, nullable=True)
-    sex: Mapped[Sex] = mapped_column(SQLAEnum(Sex), nullable=True)
-    find: Mapped[Sex] = mapped_column(SQLAEnum(Sex), nullable=True)
+    gender: Mapped[Sex] = mapped_column(SQLAEnum(Sex), nullable=True)
+    looking_for: Mapped[Sex] = mapped_column(SQLAEnum(Sex), nullable=True)
     name: Mapped[str] = mapped_column(String(50), nullable=True)
-    about: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    photo: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    photos: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     location: Mapped[Geography] = mapped_column(
         Geography(geometry_type='POINT', srid=4326),

@@ -80,3 +80,7 @@ async def get_all_users_raw(session: AsyncSession):
     async with session.begin():
         result = await session.execute(text("select * from users"))
     return result.all()
+
+
+async def update_user(session: AsyncSession,**kwargs):
+    ...
