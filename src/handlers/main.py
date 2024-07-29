@@ -2,13 +2,14 @@ from aiogram import html, types, Bot, Router, F, Dispatcher
 from aiogram.fsm.context import FSMContext
 from src.keyboards.test import keyboard, ExampleCallbackData, AdminAction, Action
 from aiogram.filters import CommandStart
-from src.database.db import add_user_if_not_exists,init_db
+from src.database.db import add_user_if_not_exists
 
 main_router = Router()
 
 
 @main_router.message(CommandStart())
 async def start(msg: types.Message, bot: Bot, db_pool) -> None:
+
     if msg.from_user is None:
         return
     m = [

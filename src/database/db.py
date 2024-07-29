@@ -1,10 +1,10 @@
-from aiogram import Dispatcher
 from geoalchemy2 import WKTElement
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, func, select
 from sqlalchemy.dialects.postgresql import insert
 
-from src.database.models import User, Base, Location, Questionary, City
+from src.database.models import User
 
 
 async def add_user_if_not_exists(user_id: int, username: str, session: AsyncSession):
@@ -17,42 +17,50 @@ async def add_user_if_not_exists(user_id: int, username: str, session: AsyncSess
 async def find_nearby_users(lat: float, lon: float, radius_km: float, session: AsyncSession):
     target_location = f'SRID=4326;POINT({lon} {lat})'
     radius_meters = radius_km * 1000
+
     async with session.begin():
         result = await session.execute(
-            select(User).join(Location, User.id == Location.user_id).where(
+            select(User).where(
                 func.ST_DWithin(
-                    Location.location,
+                    User.location,
                     func.ST_GeogFromText(target_location),
                     radius_meters
                 )
             )
         )
         nearby_users = result.scalars().all()
+
     return nearby_users
 
 
 async def add_location(user_id: int, lat_str: str, lon_str: str, session: AsyncSession):
-    lat = float(lat_str)
-    lon = float(lon_str)
+    try:
+        lat = float(lat_str)
+        lon = float(lon_str)
+    except ValueError:
+        raise ValueError("Latitude and longitude must be valid numbers")
+
     location_wkt = f'POINT({lon} {lat})'
 
     async with session.begin():
-        location = Location(
-            user_id=user_id,
-            location=WKTElement(location_wkt, srid=4326)
-        )
-        session.add(location)
+        query = select(User).filter(User.id == user_id)
+        result = await session.execute(query)
+
+        try:
+            user = result.scalar_one()
+            user.location = WKTElement(location_wkt, srid=4326)
+        except NoResultFound:
+            raise ValueError(f"User with id {user_id} does not exist")
+
+        await session.commit()
 
 
 async def get_userdata_by_id(user_id: int, session: AsyncSession):
     async with session.begin():
         result = await session.execute(
-            select(User).join(
-                Location, User.id == Location.user_id
-            ).join(Questionary, User.id == Questionary.user_id).where(
-                User.id == user_id
-            )
-        )
+            select(User).where(
+                User.id == user_id)
+                                )
     return result.scalars().first()
 
 
