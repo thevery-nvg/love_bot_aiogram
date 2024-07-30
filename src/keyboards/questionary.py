@@ -6,63 +6,55 @@ import hashlib
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
-
 def get_md5_hash(s: str) -> str:
     return hashlib.md5(s.encode('utf-8')).hexdigest()
 
 
 class Questions(str, Enum):
-    register ='register'
-    start='start'
-    gender_male = 'gender_male'
-    gender_female = 'gender_female'
+    register = 'register'
+    start = 'start'
+    gender_male = 'male'
+    gender_female = 'female'
     looking_for_male = 'looking_for_male'
     looking_for_female = 'looking_for_female'
-    looking_for_doesntmatter = 'looking_for_doesntmatter'
+    looking_for_anything = 'looking_for_anything'
     more_photo = 'more_photo'
     done_filling = 'done_filling'
 
-
-class Anketa:
-    #TODO: create states
-    pass
 
 class QuestionAction(CallbackData, prefix='#q_action'):
     question: Questions
 
 
 ask_gender_actions = [
-    {'text': 'Male', 'cb': QuestionAction(question=Questions.looking_for_male)},
-    {'text': 'Female', 'cb': QuestionAction(question=Questions.looking_for_female)},
+    {'text': 'Парень', 'cb': QuestionAction(question=Questions.gender_male)},
+    {'text': 'Девушка', 'cb': QuestionAction(question=Questions.gender_female)},
 ]
 
-ask_who_find_actions = [
-    {'text': 'Male', 'cd': QuestionAction(question=Questions.looking_for_male)},
-    {'text': 'Female', 'cd': QuestionAction(question=Questions.looking_for_female)},
-    {'text': "Doesn\'t matter", "cb": QuestionAction(question=Questions.looking_for_doesntmatter)},
-]
-
-more_photo_actions = [
-    {'text': 'One more photo', 'cd': QuestionAction(question=Questions.more_photo)}
+ask_looking_for_actions = [
+    {'text': 'Парня', 'cd': QuestionAction(question=Questions.looking_for_male)},
+    {'text': 'Девушку', 'cd': QuestionAction(question=Questions.looking_for_female)},
+    {'text': "Не имеет значения", "cb": QuestionAction(question=Questions.looking_for_anything)},
 ]
 
 register_actions = [
-    {'text': 'get registered', 'cd': QuestionAction(question=Questions.register)}
+    {'text': 'Зарегистрироваться', 'cd': QuestionAction(question=Questions.register)}
 ]
 
 start_actions = [
-    {'text': 'START', 'cd': QuestionAction(question=Questions.start)}
+    {'text': 'Начать!', 'cd': QuestionAction(question=Questions.start)}
 ]
 done_filling_actions = [
-    {'text': 'Done', 'cd': QuestionAction(question=Questions.done_filling)}
+    {'text': 'Готово', 'cd': QuestionAction(question=Questions.done_filling)}
 ]
+
+get_location_keyboard = ReplyKeyboardMarkup(
+    resize_keyboard=True,
+    keyboard=[[KeyboardButton(text='Отправить геопозицию', request_location=True)]],
+    one_time_keyboard=True)
+
 register_keyboard = InlineConstructor.create_kb(register_actions, [1])
 start_filling_keyboard = InlineConstructor.create_kb(start_actions, [1])
 gender_keyboard = InlineConstructor.create_kb(ask_gender_actions, [2])
-looking_for_keyboard = InlineConstructor.create_kb(ask_who_find_actions, [3])
-more_photo_keyboard = InlineConstructor.create_kb(more_photo_actions, [1])
-get_location_keyboard = ReplyKeyboardMarkup(
-    resize_keyboard=True,
-    keyboard=[[KeyboardButton(text='Send location', request_location=True)]],
-    one_time_keyboard=True)
+looking_for_keyboard = InlineConstructor.create_kb(ask_looking_for_actions, [3])
 done_filling_keyboard = InlineConstructor.create_kb(done_filling_actions, [1])
