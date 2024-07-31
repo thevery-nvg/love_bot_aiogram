@@ -5,28 +5,33 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, func, select
 from sqlalchemy.dialects.postgresql import insert
-
+from sqlalchemy import and_
 from src.database.models import User, Gender
 
 
-async def add_user_if_not_exists(session: AsyncSession,user_id: int, username: str):
+async def get_or_create_user(session: AsyncSession, user_id: int, username: str):
     async with session.begin():
         stmt = insert(User).values(id=user_id, username=username)
         stmt = stmt.on_conflict_do_nothing(index_elements=['user_id'])
         await session.execute(stmt)
+        user = await session.get(User, user_id)
+        return user
 
 
-async def find_nearby_users(session: AsyncSession,lat: float, lon: float, radius_km: float):
+async def find_nearby_users(session: AsyncSession, lat: float, lon: float, radius_km: float):
     target_location = f'SRID=4326;POINT({lon} {lat})'
     radius_meters = radius_km * 1000
 
     async with session.begin():
         result = await session.execute(
             select(User).where(
-                func.ST_DWithin(
-                    User.location,
-                    func.ST_GeogFromText(target_location),
-                    radius_meters
+                and_(
+                    User.frozen == False,
+                    func.ST_DWithin(
+                        User.location,
+                        func.ST_GeogFromText(target_location),
+                        radius_meters
+                    )
                 )
             )
         )
@@ -35,7 +40,7 @@ async def find_nearby_users(session: AsyncSession,lat: float, lon: float, radius
     return nearby_users
 
 
-async def update_location(session: AsyncSession,user_id: int, lat_str: str, lon_str: str):
+async def update_location(session: AsyncSession, user_id: int, lat_str: str, lon_str: str):
     # Unfinished
     try:
         lat = float(lat_str)
@@ -54,29 +59,7 @@ async def update_location(session: AsyncSession,user_id: int, lat_str: str, lon_
             user.location = WKTElement(location_wkt, srid=4326)
         except NoResultFound:
             raise ValueError(f"User with id {user_id} does not exist")
-
         await session.commit()
-
-
-async def get_userdata_by_id(session: AsyncSession, user_id: int):
-    async with session.begin():
-        result = await session.execute(
-            select(User).where(
-                User.id == user_id)
-        )
-    return result.scalars().first()
-
-
-async def get_all_users(session: AsyncSession):
-    async with session.begin():
-        result = await session.execute(select(User))
-    return result.scalars().all()
-
-
-async def get_all_users_raw(session: AsyncSession):
-    async with session.begin():
-        result = await session.execute(text("select * from users"))
-    return result.all()
 
 
 async def update_user(session: AsyncSession,
@@ -91,12 +74,12 @@ async def update_user(session: AsyncSession,
                       longitude: Optional[str] = None,
                       city: Optional[str] = None, ):
     async with session.begin():
-        result = await session.execute(select(User).filter_by(id=user_id))
-        user = result.scalar_one_or_none()
+        # result = await session.execute(select(User).filter_by(id=user_id))
+        # user = result.scalar_one_or_none()
+        user = session.get(User, user_id)
 
         if user is None:
             raise ValueError(f"User with id {user_id} does not exist")
-
         if age is not None:
             user.age = age
         if gender is not None:
@@ -113,6 +96,7 @@ async def update_user(session: AsyncSession,
             user.location = WKTElement(f'POINT({longitude} {latitude})', srid=4326)
         if city is not None:
             user.city = city
+
         user.is_registered = True
 
         await session.commit()

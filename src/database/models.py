@@ -35,6 +35,7 @@ class User(Base):
         Geography(geometry_type='POINT', srid=4326), nullable=True)
     city: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     is_registered: Mapped[bool] = mapped_column(Boolean, default=False)
+    frozen: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __repr__(self):
         return f"User(id={self.id}, username={self.username!r})"

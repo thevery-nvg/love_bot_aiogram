@@ -1,28 +1,36 @@
 from aiogram import html, types, Bot, Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import CommandStart
-from src.database.db import add_user_if_not_exists, update_user
+from src.database.db import get_or_create_user, update_user
 from src.keyboards.questionary import *
+from src.keyboards.user_profile import *
 from src.database.models import Gender
-from src.states.ddd import *
+from src.states.fsm import *
 from src.utils.validators import *
+
 main_router = Router()
 
 
 @main_router.message(CommandStart())
-async def start(msg: types.Message, bot: Bot, db_pool) -> None:
-    if msg.from_user is None:
-        return
-    m = [
-        f'Hello, <a href="tg://user?id={msg.from_user.id}">{html.quote(msg.from_user.full_name)}</a>'
-    ]
-    await msg.answer("\n".join(m))
-    await add_user_if_not_exists(db_pool, msg.from_user.id, msg.from_user.full_name)
-    await bot.send_message(msg.from_user.id, "keyboard", reply_markup=register_keyboard)
+async def start(msg: types.Message,
+                bot: Bot,
+                db_pool) -> None:
+    user = await get_or_create_user(db_pool, msg.from_user.id, msg.from_user.full_name)
+    if user.is_registered:
+        if user.frozen:
+            await bot.send_message(msg.from_user.id, "Здравствуйте",
+                                   reply_markup=user_profile_keyboard_frozen)
+        else:
+            await bot.send_message(msg.from_user.id, "Здравствуйте",
+                                   reply_markup=user_profile_keyboard)
+    else:
+        await bot.send_message(msg.from_user.id, "Здравствуйте", reply_markup=register_keyboard)
 
 
 @main_router.callback_query(QuestionAction.filter(F.question == Questions.register))
-async def start_filling(call: types.CallbackQuery, state: FSMContext, bot: Bot) -> None:
+async def start_filling(call: types.CallbackQuery,
+                        state: FSMContext,
+                        bot: Bot) -> None:
     await bot.send_message(call.from_user.id,
                            "Здравствуйте,вы начинаете заполнение анкеты,\n"
                            "Вам необходиму будет ответить на несколько вопросов,\n"
@@ -44,9 +52,11 @@ async def ask_age(call: types.CallbackQuery, bot: Bot) -> None:
 
 
 @main_router.message(Anketa.age)
-async def receive_age_ask_gender(msg: types.Message, state: FSMContext, bot: Bot) -> None:
+async def receive_age_ask_gender(msg: types.Message,
+                                 state: FSMContext,
+                                 bot: Bot) -> None:
     if validate_age(msg.text):
-        await state.update_data(age=int(msg.text))
+        await state.update_data(age=int(msg.text.strip()))
         await bot.send_message(msg.from_user.id, "Выберите ваш пол", reply_markup=gender_keyboard)
         await state.set_state(Anketa.gender)
     else:
@@ -125,7 +135,9 @@ async def receive_desc_ask_photo(message: types.Message,
 
 
 @main_router.message(Anketa.photo, content_type="photo")
-async def receive_photo(message: types.Message, state: FSMContext, bot: Bot) -> None:
+async def receive_photo(message: types.Message,
+                        state: FSMContext,
+                        bot: Bot) -> None:
     data = await state.get_data()
     photos = data.get("photos")
     photos.append(message.photo[-1].file_id)
@@ -142,12 +154,15 @@ async def receive_photo(message: types.Message, state: FSMContext, bot: Bot) -> 
 
 
 @main_router.message(Anketa.photo)
-async def invalid_photo(message: types.Message, bot: Bot) -> None:
+async def invalid_photo(message: types.Message,
+                        bot: Bot) -> None:
     await bot.send_message(message.from_user.id, "Отправьте только фото")
 
 
 @main_router.callback_query(QuestionAction.filter(F.question == Questions.done_filling))
-async def done_filling(call: types.CallbackQuery, state: FSMContext, db_pool) -> None:
+async def done_filling(call: types.CallbackQuery,
+                       state: FSMContext,
+                       db_pool) -> None:
     # unfinished
     data = await state.get_data()
     profile = dict()
@@ -160,9 +175,8 @@ async def done_filling(call: types.CallbackQuery, state: FSMContext, db_pool) ->
     longitude: str = data.get("longitude", None)
     latitude: str = data.get("latitude", None)
     if longitude is not None and latitude is not None:
-        profile["longitude"] = longitude
-        profile["latitude"] = latitude
+        profile["longitude"]: float = float(longitude)
+        profile["latitude"]: float = float(latitude)
     else:
         profile["city"] = data.get("city")
     await update_user(db_pool, user_id=call.from_user.id, **profile)
-

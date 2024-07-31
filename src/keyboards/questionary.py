@@ -22,7 +22,7 @@ class Questions(str, Enum):
     done_filling = 'done_filling'
 
 
-class QuestionAction(CallbackData, prefix='#q_action'):
+class QuestionAction(CallbackData, prefix='#ask_action'):
     question: Questions
 
 

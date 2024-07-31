@@ -18,7 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from data import config
 from data.config import *
 from middlewares.logging import StructLoggingMiddleware
-from src import database
 from utils.logging import setup_logger
 from utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
 from utils.smart_session import SmartAiogramAiohttpSession

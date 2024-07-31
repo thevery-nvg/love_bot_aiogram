@@ -73,8 +73,6 @@ class InlineConstructor:
 
             if len(data) < InlineConstructor.properties_amount:
                 raise ValueError("Недостаточно данных для создания кнопки")
-            elif len(data) < InlineConstructor.properties_amount:
-                raise ValueError("Слишком много данных для создания кнопки")
 
             buttons.append(InlineKeyboardButton(**data))  # type: ignore
 
