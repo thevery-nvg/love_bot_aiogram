@@ -77,7 +77,9 @@ def setup_middlewares(dp: Dispatcher) -> None:
 
 def setup_handlers(dp: Dispatcher) -> None:
     from src.handlers.main import main_router
+    from src.handlers.register import register_router
     dp.include_router(main_router)
+    dp.include_router(register_router)
 
 
 def setup_logging(dp: Dispatcher) -> None:

@@ -24,7 +24,7 @@ class InlineConstructor:
         "callback_game",
         "pay",
     ]
-    properties_amount = 1
+    properties_amount = 2
 
     @staticmethod
     def create_keyboard_layout(buttons: Sequence[T], count: Sequence[int]) -> list[list[T]]:

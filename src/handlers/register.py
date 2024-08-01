@@ -31,9 +31,9 @@ async def receive_age_ask_gender(msg: types.Message,
 async def receive_gender_ask_looking_for(call: types.CallbackQuery,
                                          state: FSMContext,
                                          bot: Bot) -> None:
-    if call.data == QuestionAction(question=Questions.gender_male).pack():
+    if call.data == QuestionAction(question=Questions.gender_male, value=1).pack():
         await state.update_data(gender=Gender.male)
-    elif call.data == QuestionAction(question=Questions.gender_female).pack():
+    elif call.data == QuestionAction(question=Questions.gender_female, value=1).pack():
         await state.update_data(gender=Gender.female)
     await bot.send_message(call.from_user.id, "Кого хотите найти?",
                            reply_markup=looking_for_keyboard)
@@ -44,11 +44,11 @@ async def receive_gender_ask_looking_for(call: types.CallbackQuery,
 async def receive_looking_for_ask_location(call: types.CallbackQuery,
                                            state: FSMContext,
                                            bot: Bot) -> None:
-    if call.data == QuestionAction(question=Questions.looking_for_male).pack():
+    if call.data == QuestionAction(question=Questions.looking_for_male, value=1).pack():
         await state.update_data(looking_for=Gender.male)
-    elif call.data == QuestionAction(question=Questions.looking_for_female).pack():
+    elif call.data == QuestionAction(question=Questions.looking_for_female, value=1).pack():
         await state.update_data(looking_for=Gender.female)
-    elif call.data == QuestionAction(question=Questions.looking_for_anything).pack():
+    elif call.data == QuestionAction(question=Questions.looking_for_anything, value=1).pack():
         await state.update_data(looking_for=Gender.anything)
     await bot.send_message(call.from_user.id, "Отправьте ваше местоположение или напишите город",
                            reply_markup=get_location_keyboard)
@@ -99,7 +99,7 @@ async def receive_desc_ask_photo(message: types.Message,
     await state.update_data(photos=[])
 
 
-@register_router.message(Anketa.photo, content_type="photo")
+@register_router.message(Anketa.photo, F.content_type == "photo")
 async def receive_photo(message: types.Message,
                         state: FSMContext,
                         bot: Bot) -> None:

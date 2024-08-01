@@ -18,30 +18,32 @@ class ProfileOptions(str, Enum):
 
 class ProfileAction(CallbackData, prefix='#view_action'):
     action: ProfileOptions
+    value: int
 
 
 user_profile_actions = [
-    {'text': 'Смотреть анкеты', 'cb': ProfileAction(action=ProfileOptions.view_people)},
-    {'text': 'Мой профиль', 'cb': ProfileAction(action=ProfileOptions.view_my_profile)},
+    {'text': 'Смотреть анкеты', 'cb': ProfileAction(action=ProfileOptions.view_people, value=2)},
+    {'text': 'Мой профиль', 'cb': ProfileAction(action=ProfileOptions.view_my_profile, value=2)},
 ]
 
 freeze = {'text': 'Заморозить',
-          'cb': ProfileAction(
-              action=ProfileOptions.freeze_profile)}
+          'cb': ProfileAction(action=ProfileOptions.freeze_profile, value=2)}
 unfreeze = {'text': 'Разморозить',
-            'cb': ProfileAction(
-                action=ProfileOptions.unfreeze_profile)}
+            'cb': ProfileAction(action=ProfileOptions.unfreeze_profile, value=2)}
 
 viewing_actions = [
-    {'text': 'Like👍🏻', 'cb': ProfileAction(action=ProfileOptions.like)},
-    {'text': 'Dislike👎🏻', 'cb': ProfileAction(action=ProfileOptions.dislike)},
-    {'text': 'Return to main menu', 'cb': ProfileAction(action=ProfileOptions.return_to_main_menu)},
+    {'text': 'Like👍🏻', 'cb': ProfileAction(action=ProfileOptions.like, value=2)},
+    {'text': 'Dislike👎🏻', 'cb': ProfileAction(action=ProfileOptions.dislike, value=2)},
+    {'text': 'Return to main menu',
+     'cb': ProfileAction(action=ProfileOptions.return_to_main_menu, value=2)},
 ]
 my_profile_actions = [
-    {'text': 'Refill profile', 'cb': ProfileAction(action=ProfileOptions.refill_profile)},
-    {'text': 'Update location', 'cb': ProfileAction(action=ProfileOptions.update_location)},
+    {'text': 'Refill profile', 'cb': ProfileAction(action=ProfileOptions.refill_profile, value=2)},
+    {'text': 'Update location',
+     'cb': ProfileAction(action=ProfileOptions.update_location, value=2)},
     freeze,
-    {'text': 'Return to main menu', 'cb': ProfileAction(action=ProfileOptions.return_to_main_menu)},
+    {'text': 'Return to main menu',
+     'cb': ProfileAction(action=ProfileOptions.return_to_main_menu, value=2)},
 ]
 
 

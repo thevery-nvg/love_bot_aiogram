@@ -24,28 +24,31 @@ class Questions(str, Enum):
 
 class QuestionAction(CallbackData, prefix='#ask_action'):
     question: Questions
+    value: int
 
 
 ask_gender_actions = [
-    {'text': 'Парень', 'cb': QuestionAction(question=Questions.gender_male)},
-    {'text': 'Девушка', 'cb': QuestionAction(question=Questions.gender_female)},
+    {'text': 'Парень', 'cb': QuestionAction(question=Questions.gender_male, value=1)},
+    {'text': 'Девушка', 'cb': QuestionAction(question=Questions.gender_female, value=1)},
 ]
 
 ask_looking_for_actions = [
-    {'text': 'Парня', 'cd': QuestionAction(question=Questions.looking_for_male)},
-    {'text': 'Девушку', 'cd': QuestionAction(question=Questions.looking_for_female)},
-    {'text': "Не имеет значения", "cb": QuestionAction(question=Questions.looking_for_anything)},
+    {'text': 'Парня','cb': QuestionAction(question=Questions.looking_for_male, value=1)},
+    {'text': 'Девушку','cb': QuestionAction(question=Questions.looking_for_female, value=1)},
+    {'text': "Не имеет значения","cb": QuestionAction(question=Questions.looking_for_anything,
+                                                      value=1)},
 ]
 
 register_actions = [
-    {'text': 'Зарегистрироваться', 'cd': QuestionAction(question=Questions.register)}
+    {'text': 'Зарегистрироваться',
+     'cb': QuestionAction(question=Questions.register, value=1)}
 ]
 
 start_actions = [
-    {'text': 'Начать!', 'cd': QuestionAction(question=Questions.start)}
+    {'text': 'Начать!', 'cb': QuestionAction(question=Questions.start, value=1)}
 ]
 done_filling_actions = [
-    {'text': 'Готово', 'cd': QuestionAction(question=Questions.done_filling)}
+    {'text': 'Готово', 'cb': QuestionAction(question=Questions.done_filling, value=1)}
 ]
 
 get_location_keyboard = ReplyKeyboardMarkup(
