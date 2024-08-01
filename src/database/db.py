@@ -40,26 +40,18 @@ async def find_nearby_users(session: AsyncSession, lat: float, lon: float, radiu
     return nearby_users
 
 
-async def update_location(session: AsyncSession, user_id: int, lat_str: str, lon_str: str):
-    # Unfinished
-    try:
-        lat = float(lat_str)
-        lon = float(lon_str)
-    except ValueError:
-        raise ValueError("Latitude and longitude must be valid numbers")
-
-    location_wkt = f'POINT({lon} {lat})'
-
+async def update_location(session: AsyncSession,
+                          user_id: int,
+                          latitude: Optional[float] = None,
+                          longitude: Optional[float] = None,
+                          city: Optional[str] = None, ):
     async with session.begin():
-        query = select(User).filter(User.id == user_id)
-        result = await session.execute(query)
-
-        try:
-            user = result.scalar_one()
-            user.location = WKTElement(location_wkt, srid=4326)
-        except NoResultFound:
-            raise ValueError(f"User with id {user_id} does not exist")
-        await session.commit()
+        user = await session.get(User, user_id)
+    if latitude is not None and longitude is not None:
+        user.location = WKTElement(f'POINT({longitude} {latitude})', srid=4326)
+    if city is not None:
+        user.city = city
+    await session.commit()
 
 
 async def update_user(session: AsyncSession,
@@ -74,31 +66,18 @@ async def update_user(session: AsyncSession,
                       longitude: Optional[str] = None,
                       city: Optional[str] = None, ):
     async with session.begin():
-        # result = await session.execute(select(User).filter_by(id=user_id))
-        # user = result.scalar_one_or_none()
         user = session.get(User, user_id)
-
-        if user is None:
-            raise ValueError(f"User with id {user_id} does not exist")
-        if age is not None:
-            user.age = age
-        if gender is not None:
-            user.gender = gender
-        if looking_for is not None:
-            user.looking_for = looking_for
-        if name is not None:
-            user.name = name
-        if description is not None:
-            user.description = description
-        if photos is not None:
-            user.photos = photos
+        user.age = age
+        user.gender = gender
+        user.looking_for = looking_for
+        user.name = name
+        user.description = description
+        user.photos = photos
         if latitude is not None and longitude is not None:
             user.location = WKTElement(f'POINT({longitude} {latitude})', srid=4326)
         if city is not None:
             user.city = city
-
         user.is_registered = True
-
         await session.commit()
         await session.refresh(user)
         return user
