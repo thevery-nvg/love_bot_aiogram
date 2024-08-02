@@ -33,10 +33,10 @@ ask_gender_actions = [
 ]
 
 ask_looking_for_actions = [
-    {'text': 'Парня','cb': QuestionAction(question=Questions.looking_for_male, value=1)},
-    {'text': 'Девушку','cb': QuestionAction(question=Questions.looking_for_female, value=1)},
-    {'text': "Не имеет значения","cb": QuestionAction(question=Questions.looking_for_anything,
-                                                      value=1)},
+    {'text': 'Парня', 'cb': QuestionAction(question=Questions.looking_for_male, value=1)},
+    {'text': 'Девушку', 'cb': QuestionAction(question=Questions.looking_for_female, value=1)},
+    {'text': "Любого", "cb": QuestionAction(question=Questions.looking_for_anything,
+                                            value=1)},
 ]
 
 register_actions = [

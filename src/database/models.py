@@ -2,7 +2,7 @@ from typing import Optional
 import enum
 from geoalchemy2 import Geography
 from sqlalchemy import (Integer, String, BigInteger, func,
-                        DateTime, Enum as SQLAEnum, JSON, Boolean)
+                        DateTime, Enum as SQLAEnum, JSON, Boolean, ForeignKey)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -39,3 +39,10 @@ class User(Base):
 
     def __repr__(self):
         return f"User(id={self.id}, username={self.username!r})"
+
+
+class Like(Base):
+    __tablename__ = "likes"
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    liker: Mapped[list[int]] = mapped_column(JSON, nullable=True)
+    liked_by: Mapped[list[int]] = mapped_column(JSON, nullable=True)
