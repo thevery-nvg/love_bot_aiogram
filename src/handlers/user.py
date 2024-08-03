@@ -7,6 +7,7 @@ from src.keyboards.questionary import get_location_keyboard
 from src.keyboards.user_profile import *
 from src.states.fsm import Anketa
 from src.utils.validators import validate_city
+from src.handlers.register import ask_age
 
 registered_user_router = Router()
 
@@ -75,7 +76,8 @@ async def receive_location(message: types.Message,
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.refill_profile))
 async def refill_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
-    ...
+    await state.set_state(Anketa.age)
+    await ask_age(call, bot)
 
 
 @registered_user_router.callback_query(
@@ -91,6 +93,6 @@ async def unfreeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bo
 
 
 @registered_user_router.callback_query(
-    ProfileAction.filter(F.action == ProfileOptions.unfreeze_profile))
+    ProfileAction.filter(F.action == ProfileOptions.return_to_main_menu))
 async def return_to_main_menu(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
     ...

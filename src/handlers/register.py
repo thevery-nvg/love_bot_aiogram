@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from src.database.db import update_user
 from src.keyboards.questionary import *
 from src.database.models import Gender
+from src.keyboards.user_profile import user_profile_keyboard
 from src.states.fsm import *
 from src.utils.validators import *
 
@@ -127,6 +128,7 @@ async def invalid_photo(message: types.Message,
 @register_router.callback_query(QuestionAction.filter(F.question == Questions.done_filling))
 async def done_filling(call: types.CallbackQuery,
                        state: FSMContext,
+                       bot: Bot,
                        db_pool) -> None:
     # unfinished
     data = await state.get_data()
@@ -145,3 +147,5 @@ async def done_filling(call: types.CallbackQuery,
     else:
         profile["city"] = data.get("city")
     await update_user(db_pool, user_id=call.from_user.id, **profile)
+    await bot.send_message(call.from_user.id, "Здравствуйте", user_profile_keyboard)
+    await state.set_state(state=None)
