@@ -37,13 +37,14 @@ viewing_actions = [
     {'text': 'Return to main menu',
      'cb': ProfileAction(action=ProfileOptions.return_to_main_menu, value=2)},
 ]
+return_to_main_menu = {'text': 'Return to main menu',
+                       'cb': ProfileAction(action=ProfileOptions.return_to_main_menu, value=2)}
 my_profile_actions = [
     {'text': 'Refill profile', 'cb': ProfileAction(action=ProfileOptions.refill_profile, value=2)},
     {'text': 'Update location',
      'cb': ProfileAction(action=ProfileOptions.update_location, value=2)},
     freeze,
-    {'text': 'Return to main menu',
-     'cb': ProfileAction(action=ProfileOptions.return_to_main_menu, value=2)},
+    return_to_main_menu
 ]
 
 

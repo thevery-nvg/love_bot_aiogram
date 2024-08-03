@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import and_
-from src.database.models import User, Gender,Like
+from src.database.models import User, Gender, Like
 
 
 async def get_or_create_user(session: AsyncSession, user_id: int, username: str):
@@ -42,6 +42,21 @@ async def find_nearby_users(session: AsyncSession, lat: float, lon: float, radiu
     return nearby_users
 
 
+async def get_same_city_users(session: AsyncSession, city: str):
+    async with session.begin():
+        result = await session.execute(
+            select(User).where(
+                and_(
+                    User.frozen == False,
+                    User.city == city
+                )
+            )
+        )
+        same_city_users = result.scalars().all()
+
+    return same_city_users
+
+
 async def update_location(session: AsyncSession,
                           user_id: int,
                           latitude: Optional[float] = None,
@@ -55,6 +70,14 @@ async def update_location(session: AsyncSession,
         user.city = city
     await session.commit()
 
+
+async def get_user(session: AsyncSession, user_id: int):
+    async with session.begin():
+        try:
+            user = await session.get(User, user_id)
+        except NoResultFound:
+            return None
+    return user
 
 async def update_user(session: AsyncSession,
                       user_id: int,
