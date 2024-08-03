@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import and_
-from src.database.models import User, Gender
+from src.database.models import User, Gender,Like
 
 
 async def get_or_create_user(session: AsyncSession, user_id: int, username: str):
@@ -15,6 +15,8 @@ async def get_or_create_user(session: AsyncSession, user_id: int, username: str)
         stmt = stmt.on_conflict_do_nothing(index_elements=['user_id'])
         await session.execute(stmt)
         user = await session.get(User, user_id)
+        stmt = insert(Like).values(user_id=user_id)
+        await session.execute(stmt)
         return user
 
 
