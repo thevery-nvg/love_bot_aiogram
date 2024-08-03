@@ -79,6 +79,21 @@ async def get_user(session: AsyncSession, user_id: int):
             return None
     return user
 
+
+async def freeze_user(session: AsyncSession, user_id: int):
+    async with session.begin():
+        user = await session.get(User, user_id)
+        user.frozen = True
+        await session.commit()
+
+
+async def unfreeze_user(session: AsyncSession, user_id: int):
+    async with session.begin():
+        user = await session.get(User, user_id)
+        user.frozen = False
+        await session.commit()
+
+
 async def update_user(session: AsyncSession,
                       user_id: int,
                       age: Optional[int] = None,

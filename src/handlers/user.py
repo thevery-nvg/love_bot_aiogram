@@ -2,7 +2,7 @@ from aiogram import types, Bot, Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto
 
-from src.database.db import update_location, get_user
+from src.database.db import update_location, get_user, freeze_user, unfreeze_user
 from src.keyboards.questionary import get_location_keyboard
 from src.keyboards.user_profile import *
 from src.states.fsm import Anketa
@@ -68,7 +68,7 @@ async def receive_location(message: types.Message,
         city = message.text.strip()
         if validate_city(city):
             await update_location(dbpool, message.from_user.id, city=city)
-            await state.clear()
+            await state.set_state(state=None)
         else:
             await bot.send_message(message.from_user.id, "Введите корректный город")
 
@@ -83,13 +83,15 @@ async def refill_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot,
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.freeze_profile))
 async def freeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
-    ...
+    await freeze_user(dbpool, call.from_user.id)
+    await bot.send_message(call.from_user.id, "Профиль успешно заморожен")
 
 
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.unfreeze_profile))
 async def unfreeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
-    ...
+    await unfreeze_user(dbpool, call.from_user.id)
+    await bot.send_message(call.from_user.id, "Профиль успешно разморожен")
 
 
 @registered_user_router.callback_query(

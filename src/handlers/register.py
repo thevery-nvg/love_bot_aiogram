@@ -130,7 +130,6 @@ async def done_filling(call: types.CallbackQuery,
                        state: FSMContext,
                        bot: Bot,
                        db_pool) -> None:
-    # unfinished
     data = await state.get_data()
     profile = dict()
     profile["age"]: int = data.get("age")
