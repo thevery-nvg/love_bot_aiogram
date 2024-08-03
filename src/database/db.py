@@ -20,7 +20,10 @@ async def get_or_create_user(session: AsyncSession, user_id: int, username: str)
         return user
 
 
-async def find_nearby_users(session: AsyncSession, lat: float, lon: float, radius_km: float):
+async def get_nearby_users(session: AsyncSession,
+                           lat: float, lon: float,
+                           radius_km: float,
+                           gender: Gender):
     target_location = f'SRID=4326;POINT({lon} {lat})'
     radius_meters = radius_km * 1000
 
@@ -29,6 +32,7 @@ async def find_nearby_users(session: AsyncSession, lat: float, lon: float, radiu
             select(User).where(
                 and_(
                     User.frozen == False,
+                    User.gender == gender,
                     func.ST_DWithin(
                         User.location,
                         func.ST_GeogFromText(target_location),
@@ -42,12 +46,15 @@ async def find_nearby_users(session: AsyncSession, lat: float, lon: float, radiu
     return nearby_users
 
 
-async def get_same_city_users(session: AsyncSession, city: str):
+async def get_same_city_users(session: AsyncSession,
+                              city: str,
+                              gender: Gender):
     async with session.begin():
         result = await session.execute(
             select(User).where(
                 and_(
                     User.frozen == False,
+                    User.gender == gender,
                     User.city == city
                 )
             )
@@ -69,6 +76,23 @@ async def update_location(session: AsyncSession,
     if city is not None:
         user.city = city
     await session.commit()
+
+
+async def get_nearby_and_same_city_users(session: AsyncSession,
+                                         lat: float, lon: float,
+                                         radius_km: float,
+                                         city: str):
+    nearby_users = await get_nearby_users(session, lat, lon, radius_km)
+    same_city_users = await get_same_city_users(session, city)
+
+    combined_users = {user.id: user for user in nearby_users}
+    for user in same_city_users:
+        if user.id not in combined_users:
+            combined_users[user.id] = user
+
+    ordered_users = list(combined_users.values())[:100]
+
+    return ordered_users
 
 
 async def get_user(session: AsyncSession, user_id: int):

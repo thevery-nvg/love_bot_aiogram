@@ -97,4 +97,5 @@ async def unfreeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bo
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.return_to_main_menu))
 async def return_to_main_menu(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
-    ...
+    await bot.send_message(call.from_user.id, "Здравствуйте", reply_markup=user_profile_keyboard)
+    await state.set_state(state=None)
