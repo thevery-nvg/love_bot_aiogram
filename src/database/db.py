@@ -81,9 +81,10 @@ async def update_location(session: AsyncSession,
 async def get_nearby_and_same_city_users(session: AsyncSession,
                                          lat: float, lon: float,
                                          radius_km: float,
-                                         city: str):
-    nearby_users = await get_nearby_users(session, lat, lon, radius_km)
-    same_city_users = await get_same_city_users(session, city)
+                                         city: str,
+                                         gender: Gender):
+    nearby_users = await get_nearby_users(session, lat, lon, radius_km, gender)
+    same_city_users = await get_same_city_users(session, city, gender)
 
     combined_users = {user.id: user for user in nearby_users}
     for user in same_city_users:
