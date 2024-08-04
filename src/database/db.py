@@ -146,3 +146,15 @@ async def update_user(session: AsyncSession,
         await session.commit()
         await session.refresh(user)
         return user
+
+
+async def calculate_distance(session: AsyncSession, user1: User, user2: User) -> float:
+    if not user1.location or not user2.location:
+        raise ValueError("Один из пользователей не имеет координат.")
+
+    distance_query = select([
+        func.ST_Distance(user1.location, user2.location)
+    ])
+
+    distance = await session.execute(distance_query)
+    return distance.scalar()
