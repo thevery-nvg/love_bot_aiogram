@@ -3,7 +3,7 @@ from typing import Optional
 from geoalchemy2 import WKTElement
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text, func, select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import and_
 from src.database.models import User, Gender, Like
@@ -14,19 +14,16 @@ async def get_or_create_user(session: AsyncSession, user_id: int, username: str)
         stmt = insert(User).values(id=user_id, username=username)
         stmt = stmt.on_conflict_do_nothing(index_elements=['user_id'])
         await session.execute(stmt)
-        user = await session.get(User, user_id)
-        stmt = insert(Like).values(user_id=user_id)
-        await session.execute(stmt)
+        user = await session.scalar(select(User).where(User.id == user_id))
         return user
 
 
 async def get_nearby_users(session: AsyncSession,
-                           lat: float, lon: float,
+                           location,
                            radius_km: float,
                            gender: Gender):
-    target_location = f'SRID=4326;POINT({lon} {lat})'
+    target_location = f'SRID=4326;POINT({location.longitude} {location.latitude})'
     radius_meters = radius_km * 1000
-
     async with session.begin():
         result = await session.execute(
             select(User).where(
@@ -64,26 +61,12 @@ async def get_same_city_users(session: AsyncSession,
     return same_city_users
 
 
-async def update_location(session: AsyncSession,
-                          user_id: int,
-                          latitude: Optional[float] = None,
-                          longitude: Optional[float] = None,
-                          city: Optional[str] = None, ):
-    async with session.begin():
-        user = await session.get(User, user_id)
-    if latitude is not None and longitude is not None:
-        user.location = WKTElement(f'POINT({longitude} {latitude})', srid=4326)
-    if city is not None:
-        user.city = city
-    await session.commit()
-
-
 async def get_nearby_and_same_city_users(session: AsyncSession,
-                                         lat: float, lon: float,
+                                         location,
                                          radius_km: float,
                                          city: str,
                                          gender: Gender):
-    nearby_users = await get_nearby_users(session, lat, lon, radius_km, gender)
+    nearby_users = await get_nearby_users(session, location, radius_km, gender)
     same_city_users = await get_same_city_users(session, city, gender)
 
     combined_users = {user.id: user for user in nearby_users}
@@ -110,6 +93,7 @@ async def freeze_user(session: AsyncSession, user_id: int):
         user = await session.get(User, user_id)
         user.frozen = True
         await session.commit()
+    return user
 
 
 async def unfreeze_user(session: AsyncSession, user_id: int):
@@ -117,35 +101,7 @@ async def unfreeze_user(session: AsyncSession, user_id: int):
         user = await session.get(User, user_id)
         user.frozen = False
         await session.commit()
-
-
-async def update_user(session: AsyncSession,
-                      user_id: int,
-                      age: Optional[int] = None,
-                      gender: Optional[Gender] = None,
-                      looking_for: Optional[Gender] = None,
-                      name: Optional[str] = None,
-                      description: Optional[str] = None,
-                      photos: Optional[list[str]] = None,
-                      latitude: Optional[str] = None,
-                      longitude: Optional[str] = None,
-                      city: Optional[str] = None, ):
-    async with session.begin():
-        user = session.get(User, user_id)
-        user.age = age
-        user.gender = gender
-        user.looking_for = looking_for
-        user.name = name
-        user.description = description
-        user.photos = photos
-        if latitude is not None and longitude is not None:
-            user.location = WKTElement(f'POINT({longitude} {latitude})', srid=4326)
-        if city is not None:
-            user.city = city
-        user.is_registered = True
-        await session.commit()
-        await session.refresh(user)
-        return user
+    return user
 
 
 async def calculate_distance(session: AsyncSession, user1: User, user2: User) -> float:
@@ -158,3 +114,50 @@ async def calculate_distance(session: AsyncSession, user1: User, user2: User) ->
 
     distance = await session.execute(distance_query)
     return distance.scalar()
+
+
+async def like_user(session: AsyncSession, hunter: User, booty: User):
+    ...
+
+
+async def update_user(session: AsyncSession, user: User, **kwargs):
+    async with session.begin():
+        for key, value in kwargs.items():
+            match key:
+                case "username":
+                    user.username = value
+                case "age":
+                    user.age = value
+                case "gender":
+                    user.gender = value
+                case "looking_for":
+                    user.looking_for = value
+                case "name":
+                    user.name = value
+                case "description":
+                    user.description = value
+                case "photos":
+                    user.photos = value
+                case "location":
+                    if value:
+                        user.location = WKTElement(f'POINT({value.longitude} {value.latitude})',
+                                                   srid=4326)
+                    else:
+                        user.location = None
+                case "city":
+                    user.city = value
+                case "is_registered":
+                    user.is_registered = value
+                case "frozen":
+                    user.frozen = value
+                case "liker":
+                    user.liker = value
+                case "liked_by":
+                    user.liked_by = value
+                case "matched_with":
+                    user.matched_with = value
+                case _:
+                    raise ValueError(f"Неизвестное поле {key}")
+        await session.commit()
+        await session.refresh(user)
+        return user

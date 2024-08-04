@@ -28,7 +28,7 @@ class StructLogAiogramAiohttpSessions(AiohttpSession):
             bot=bot.token,
             method=method.model_dump(exclude_none=True, exclude_unset=True),
             timeout=timeout,
-            #api=self.api,
+            # api=self.api,
             url=self.api.api_url(bot.token, method.__api_method__),
         )
         st = time.monotonic()

@@ -37,6 +37,10 @@ class User(Base):
     is_registered: Mapped[bool] = mapped_column(Boolean, default=False)
     frozen: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    liker: Mapped[list[int]] = mapped_column(JSON, defalut=list())
+    liked_by: Mapped[list[int]] = mapped_column(JSON, defalut=list())
+    matched_with: Mapped[list[int]] = mapped_column(JSON, defalut=list())
+
     def __repr__(self):
         return f"User(id={self.id}, username={self.username!r})"
 

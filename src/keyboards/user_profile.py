@@ -58,3 +58,4 @@ def my_profile_keyboard(frozen: bool):
 
 user_profile_keyboard = InlineConstructor.create_kb(user_profile_actions, [1, 1])
 viewing_keyboard = InlineConstructor.create_kb(viewing_actions, [2, 1])
+continue_keyboard = ...

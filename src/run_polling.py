@@ -6,7 +6,6 @@ import tenacity
 from aiogram import Dispatcher, Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
-from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from aiogram.fsm.storage.redis import RedisStorage
@@ -15,12 +14,12 @@ from redis.asyncio import Redis
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data import config
-from data.config import *
-from middlewares.logging import StructLoggingMiddleware
-from utils.logging import setup_logger
-from utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
-from utils.smart_session import SmartAiogramAiohttpSession
+from src.data import config
+from src.data.config import *
+from src.middlewares.logging import StructLoggingMiddleware
+from src.utils.logging import setup_logger
+from src.utils.connect_to_services import wait_sqlalchemy, wait_redis_pool
+from src.utils.smart_session import SmartAiogramAiohttpSession
 
 
 async def create_db_connections(dp: Dispatcher) -> None:
@@ -132,7 +131,7 @@ def main() -> None:
                 port=config.FSM_PORT,
                 db=0,
             ))
-    dp = Dispatcher(key_builder=DefaultKeyBuilder(with_bot_id=True), storage=storage)
+    dp = Dispatcher(bot=bot, storage=storage)
     dp["aiogram_session_logger"] = aiogram_session_logger
     dp.startup.register(aiogram_on_startup_polling)
     dp.shutdown.register(aiogram_on_shutdown_polling)

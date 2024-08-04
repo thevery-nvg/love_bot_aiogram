@@ -1,5 +1,6 @@
 from aiogram import types, Bot, Router, F
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Location
 
 from src.database.db import update_user
 from src.keyboards.questionary import *
@@ -61,9 +62,8 @@ async def receive_location_ask_name(message: types.Message,
                                     state: FSMContext,
                                     bot: Bot) -> None:
     if message.location is not None:
-        latitude = message.location.latitude
-        longitude = message.location.longitude
-        await state.update_data(longitude=longitude, latitude=latitude)
+        location: Location = message.location
+        await state.update_data(location=location)
         await bot.send_message(message.from_user.id, "Ваше имя")
         await state.set_state(Anketa.name)
     else:
@@ -138,13 +138,12 @@ async def done_filling(call: types.CallbackQuery,
     profile["name"]: str = data.get("name")
     profile["description"]: str = data.get("description")
     profile["photos"]: list[str] = data.get("photos")
-    longitude: float = data.get("longitude", None)
-    latitude: float = data.get("latitude", None)
-    if longitude is not None and latitude is not None:
-        profile["longitude"]: float = longitude
-        profile["latitude"]: float = latitude
+    profile["is_registered"] = True
+    location = data.get("location", None)
+    if location is not None:
+        profile["location"] = location
     else:
         profile["city"] = data.get("city")
-    await update_user(db_pool, user_id=call.from_user.id, **profile)
+    await update_user(db_pool, data.get('me'), **profile)
     await bot.send_message(call.from_user.id, "Здравствуйте", user_profile_keyboard)
     await state.set_state(state=None)

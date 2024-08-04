@@ -1,6 +1,5 @@
 from aiogram import Dispatcher, Bot
 from aiogram.client.default import DefaultBotProperties
-from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.memory import MemoryStorage
 from fastapi import FastAPI, Request
 from src.data.config import *
@@ -11,9 +10,9 @@ from aiogram.fsm.storage.redis import RedisStorage
 import orjson
 from dataclasses import dataclass, field
 
-from utils.smart_session import SmartAiogramAiohttpSession
+from src.utils.smart_session import SmartAiogramAiohttpSession
 import aiojobs
-from run_polling import setup_aiogram
+from src.run_polling import setup_aiogram
 
 app = FastAPI()
 
@@ -46,11 +45,13 @@ async def on_startup() -> None:
                 port=FSM_PORT,
                 db=0,
             ))
-    dp = Dispatcher(key_builder=DefaultKeyBuilder(with_bot_id=True), storage=storage)
+    dp = Dispatcher(bot=bot, storage=storage)
     aiogram_session_logger = setup_logger().bind(type="aiogram_session")
     dp["aiogram_session_logger"] = aiogram_session_logger
+
     dp.startup.register(aiogram_on_startup_webhook)
     dp.shutdown.register(aiogram_on_shutdown_webhook)
+
 
     bot_state.bot = bot
     bot_state.dp = dp
@@ -80,11 +81,13 @@ async def telegram_webhook(request: Request, token: str):
     update = await request.json()
     bot: Bot = bot_state.bot
     dp: Dispatcher = bot_state.dp
-    await dp.feed_update(bot=bot, update=update)  # тут большой вопрос, может и другая функция
+    await dp.feed_update(bot=bot, update=update)
     return {"status": "ok"}
 
 
-async def aiogram_on_startup_webhook(dispatcher: Dispatcher, bot: Bot) -> None:
+async def aiogram_on_startup_webhook() -> None:
+    dispatcher = bot_state.dp
+    bot = bot_state.bot
     await setup_aiogram(dispatcher)
     webhook_logger = dispatcher["aiogram_logger"].bind(webhook_url=MAIN_WEBHOOK_ADDRESS)
     webhook_logger.debug("Configuring webhook")
@@ -96,7 +99,9 @@ async def aiogram_on_startup_webhook(dispatcher: Dispatcher, bot: Bot) -> None:
     webhook_logger.info("Configured webhook")
 
 
-async def aiogram_on_shutdown_webhook(dispatcher: Dispatcher, bot: Bot) -> None:
+async def aiogram_on_shutdown_webhook() -> None:
+    dispatcher = bot_state.dp
+    bot = bot_state.bot
     dispatcher["aiogram_logger"].debug("Stopping webhook")
     await bot.delete_webhook()
     await close_db_connections(dispatcher)
@@ -108,7 +113,7 @@ async def aiogram_on_shutdown_webhook(dispatcher: Dispatcher, bot: Bot) -> None:
 def main() -> None:
     import uvicorn
     uvicorn.run(
-        "src/webhook_run:app",
+        "__main__:app",
         host=MAIN_WEBHOOK_LISTENING_HOST,
         port=MAIN_WEBHOOK_LISTENING_PORT,
         log_level="info",

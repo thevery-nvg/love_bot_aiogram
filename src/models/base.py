@@ -6,9 +6,9 @@ import pydantic
 
 
 def orjson_dumps(
-    v: typing.Any,
-    *,
-    default: typing.Optional[typing.Callable[[typing.Any], typing.Any]],
+        v: typing.Any,
+        *,
+        default: typing.Optional[typing.Callable[[typing.Any], typing.Any]],
 ) -> str:
     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
     return orjson.dumps(v, default=default).decode()
