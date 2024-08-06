@@ -2,7 +2,7 @@ from aiogram import types, Bot, Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto
 
-from src.database.db import get_user, freeze_user, unfreeze_user, \
+from src.database.db import freeze_user, unfreeze_user, \
     get_nearby_and_same_city_users, calculate_distance, update_user
 from src.database.models import User
 from src.keyboards.questionary import get_location_keyboard
@@ -135,7 +135,9 @@ async def refill_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot)
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.freeze_profile))
 async def freeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
-    me = await freeze_user(dbpool, call.from_user.id)
+    data = await state.get_data()
+    me = data.get('me')
+    me = await freeze_user(dbpool, me)
     await state.update_data(me=me)
     await bot.send_message(call.from_user.id, "Профиль успешно заморожен")
 
@@ -143,7 +145,9 @@ async def freeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot,
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.unfreeze_profile))
 async def unfreeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
-    me = await unfreeze_user(dbpool, call.from_user.id)
+    data = await state.get_data()
+    me = data.get('me')
+    me = await unfreeze_user(dbpool, me)
     await state.update_data(me=me)
     await bot.send_message(call.from_user.id, "Профиль успешно разморожен")
 
