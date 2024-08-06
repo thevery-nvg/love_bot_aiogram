@@ -14,33 +14,35 @@ from src.handlers.register import ask_age
 registered_user_router = Router()
 
 
-@registered_user_router.callback_query(ProfileAction.filter(F.action == ProfileOptions.view_people))
+@registered_user_router.callback_query(
+    ProfileAction.filter(F.action == ProfileOptions.view_people)
+)
 async def view_people(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
     data = await state.get_data()
     me = data.get('me')
-    if not data.get('people'):
-        people = await get_nearby_and_same_city_users(dbpool,
-                                                      me.location,
-                                                      5,
-                                                      me.city,
-                                                      me.gender)
-        data['people'] = iter(people)
+    if 'people' not in data or not data['people']:
+        data['people'] = iter(await get_nearby_and_same_city_users(
+            dbpool, me.location, 5, me.city, me.gender
+        ))
     try:
-        booty = data['people'].__next__()
+        booty = next(data['people'])
     except StopIteration:
-        ...
-    else:
-        media = [InputMediaPhoto(media=photo) for photo in booty.photos]
-        msg = (f"name {booty.name}\n"
-               f"{calculate_distance(dbpool, me, booty)}m from you"
-               f"age: {booty.age}\n"
-               f"gender: {booty.gender}\n"
-               f"looking for: {booty.looking_for}\n"
-               f"description: {booty.description}\n")
-        await bot.send_media_group(chat_id=call.from_user.id, media=media)
-        await bot.send_message(call.from_user.id, msg, reply_markup=viewing_keyboard)
-        await state.update_data(people=data['people'])
-        await state.update_data(booty=booty)
+        data['people'] = iter(await get_nearby_and_same_city_users(
+            dbpool, me.location, 5, me.city, me.gender
+        ))
+        booty = next(data['people'])
+    media = [InputMediaPhoto(media=photo) for photo in booty.photos]
+    msg = (
+        f"name: {booty.name}\n"
+        f"{calculate_distance(dbpool, me, booty)}m from you\n"
+        f"age: {booty.age}\n"
+        f"gender: {booty.gender}\n"
+        f"looking for: {booty.looking_for}\n"
+        f"description: {booty.description}\n"
+    )
+    await bot.send_media_group(chat_id=call.from_user.id, media=media)
+    await bot.send_message(call.from_user.id, msg, reply_markup=viewing_keyboard)
+    await state.update_data(people=data['people'], booty=booty)
 
 
 @registered_user_router.callback_query(
