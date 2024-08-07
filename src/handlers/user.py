@@ -1,4 +1,5 @@
 from aiogram import types, Bot, Router, F
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto
 
@@ -22,13 +23,13 @@ async def view_people(call: types.CallbackQuery, state: FSMContext, bot: Bot, db
     me = data.get('me')
     if 'people' not in data or not data['people']:
         data['people'] = iter(await get_nearby_and_same_city_users(
-            dbpool, me.location, 5, me.city, me.gender
+            dbpool, me.location, 5, me.city, me.looking_for
         ))
     try:
         booty = next(data['people'])
     except StopIteration:
         data['people'] = iter(await get_nearby_and_same_city_users(
-            dbpool, me.location, 5, me.city, me.gender
+            dbpool, me.location, 5, me.city, me.looking_for
         ))
         booty = next(data['people'])
     media = [InputMediaPhoto(media=photo) for photo in booty.photos]
@@ -47,23 +48,34 @@ async def view_people(call: types.CallbackQuery, state: FSMContext, bot: Bot, db
 
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.like))
-async def like(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
+async def like(state: FSMContext, bot: Bot, dbpool):
     data = await state.get_data()
     booty: User = data.get('booty')
     me: User = data.get('me')
-    if me in booty.liker:
-        me.matched_with.append(booty)
-        booty.matched_with.append(me)
+    mutual = me.id in booty.liker
+    if mutual:
         booty.liker.remove(me)
-        await update_user(dbpool, me)
         await update_user(dbpool, booty)
-        await bot.send_message(me.id, f"Есть взаимная сипатия !https://t.me/{booty.username}",
-                               reply_markup=continue_keyboard)
-        await bot.send_message(booty.id, f"Есть взаимная сипатия! https://t.me/{me.username}")
+        await bot.send_message(
+            me.id,
+            f"Отлично, есть взаимная симпатия!\n"
+            f"Надеюсь, хорошо проведете время)\n"
+            f'<a href="https://t.me/{booty.username}">Написать {booty.name}</a>',
+            parse_mode=ParseMode.HTML,
+            reply_markup=continue_keyboard
+        )
+        await bot.send_message(
+            booty.id,
+            f"Отлично, есть взаимная симпатия!\n"
+            f"Надеюсь, хорошо проведете время)\n"
+            f'<a href="https://t.me/{me.username}">Написать {me.name}</a>',
+            parse_mode=ParseMode.HTML,
+            reply_markup=continue_keyboard
+        )
     else:
         me.liker.append(booty)
         booty.liked_by.append(me)
-        await update_user(dbpool, me)
+        me = await update_user(dbpool, me)
         await update_user(dbpool, booty)
         await state.update_data(booty=None, me=me)
 
@@ -81,7 +93,7 @@ async def dislike(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool
 
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.unfreeze_profile))
-async def view_my_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
+async def view_my_profile(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
     me = data.get('me')
     msg = (f"name {me.name}\n"
@@ -156,7 +168,7 @@ async def unfreeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bo
 
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.return_to_main_menu))
-async def return_to_main_menu(call: types.CallbackQuery, state: FSMContext, bot: Bot, dbpool):
+async def return_to_main_menu(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     await bot.send_message(call.from_user.id, "Здравствуйте",
                            reply_markup=user_profile_keyboard)
     await state.set_state(state=None)

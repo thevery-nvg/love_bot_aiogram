@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import and_
 from src.database.models import User, Gender, Like
+from random import shuffle
 
 
 async def get_or_create_user(session: AsyncSession, user_id: int, username: str):
@@ -39,7 +40,6 @@ async def get_nearby_users(session: AsyncSession,
             )
         )
         nearby_users = result.scalars().all()
-
     return nearby_users
 
 
@@ -75,7 +75,7 @@ async def get_nearby_and_same_city_users(session: AsyncSession,
             combined_users[user.id] = user
 
     ordered_users = list(combined_users.values())[:100]
-
+    shuffle(ordered_users)
     return ordered_users
 
 
@@ -118,7 +118,7 @@ async def like_user(session: AsyncSession, hunter: User, booty: User):
     ...
 
 
-async def update_user(session: AsyncSession, user: User, **kwargs):
+async def update_user(session: AsyncSession, user: User, **kwargs) -> User:
     async with session.begin():
         for key, value in kwargs.items():
             match key:
