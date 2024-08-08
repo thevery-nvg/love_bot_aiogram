@@ -139,7 +139,7 @@ async def done_filling(call: types.CallbackQuery,
     profile["description"]: str = data.get("description")
     profile["photos"]: list[str] = data.get("photos")
     profile["is_registered"] = True
-    location = data.get("location", None)
+    location: Location = data.get("location", None)
     if location is not None:
         profile["location"] = location
     else:

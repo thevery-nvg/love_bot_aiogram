@@ -1,7 +1,7 @@
 from aiogram import types, Bot, Router, F
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InputMediaPhoto
+from aiogram.types import InputMediaPhoto, Location
 
 from src.database.db import freeze_user, unfreeze_user, \
     get_nearby_and_same_city_users, calculate_distance, update_user
@@ -122,7 +122,7 @@ async def receive_location(message: types.Message,
                            state: FSMContext) -> None:
     data = await state.get_data()
     if message.location is not None:
-        location = message.location
+        location: Location = message.location
         me = await update_user(session=dbpool,
                                user=data.get('me'),
                                location=location)

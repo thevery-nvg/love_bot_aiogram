@@ -1,6 +1,3 @@
-from typing import Optional
-
-from geoalchemy2 import WKTElement
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
@@ -8,6 +5,9 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import and_
 from src.database.models import User, Gender, Like
 from random import shuffle
+from aiogram.types import Location
+from shapely.geometry import Point
+from geoalchemy2.shape import from_shape
 
 
 async def get_or_create_user(session: AsyncSession, user_id: int, username: str):
@@ -20,10 +20,11 @@ async def get_or_create_user(session: AsyncSession, user_id: int, username: str)
 
 
 async def get_nearby_users(session: AsyncSession,
-                           location,
+                           location:Location,
                            radius_km: float,
                            gender: Gender):
-    target_location = f'SRID=4326;POINT({location.longitude} {location.latitude})'
+    target_location = Point(location.longitude, location.latitude)
+    target_location = from_shape(target_location, srid=4326)
     radius_meters = radius_km * 1000
     async with session.begin():
         result = await session.execute(
@@ -33,7 +34,7 @@ async def get_nearby_users(session: AsyncSession,
                     User.gender == gender,
                     func.ST_DWithin(
                         User.location,
-                        func.ST_GeogFromText(target_location),
+                        target_location,
                         radius_meters
                     )
                 )
@@ -62,7 +63,7 @@ async def get_same_city_users(session: AsyncSession,
 
 
 async def get_nearby_and_same_city_users(session: AsyncSession,
-                                         location,
+                                         location:Location,
                                          radius_km: float,
                                          city: str,
                                          gender: Gender):
@@ -138,8 +139,8 @@ async def update_user(session: AsyncSession, user: User, **kwargs) -> User:
                     user.photos = value
                 case "location":
                     if value:
-                        user.location = WKTElement(f'POINT({value.longitude} {value.latitude})',
-                                                   srid=4326)
+                        point = Point(value.longitude, value.latitude)
+                        user.location = from_shape(point, srid=4326)
                     else:
                         user.location = None
                 case "city":

@@ -19,6 +19,7 @@ redis = "^5.0.7"
 tenacity = "^8.5.0"
 aiojobs = "^1.2.1"
 fastapi = "^0.111.1"
+shapely = "^2.0.5"
 
 
 [build-system]
