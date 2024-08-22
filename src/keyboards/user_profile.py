@@ -14,7 +14,7 @@ class ProfileOptions(str, Enum):
     return_to_main_menu = 'return_to_main_menu'
     refill_profile = 'refill_profile'
     update_location = 'update_location'
-    continue_ = 'continue'
+    face_picker = 'face_picker'
 
 
 class ProfileAction(CallbackData, prefix='#view_action'):
@@ -24,6 +24,7 @@ class ProfileAction(CallbackData, prefix='#view_action'):
 
 user_profile_actions = [
     {'text': 'Смотреть анкеты', 'cb': ProfileAction(action=ProfileOptions.view_people, value=2)},
+    {'text': 'Лицемер', 'cb': ProfileAction(action=ProfileOptions.face_picker, value=2)},
     {'text': 'Мой профиль', 'cb': ProfileAction(action=ProfileOptions.view_my_profile, value=2)},
 ]
 
