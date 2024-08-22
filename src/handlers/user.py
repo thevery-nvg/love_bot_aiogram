@@ -12,6 +12,7 @@ from src.states.fsm import Anketa
 from src.utils.validators import validate_city
 from src.handlers.register import ask_age
 
+
 registered_user_router = Router()
 
 

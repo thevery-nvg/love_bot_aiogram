@@ -14,6 +14,7 @@ class ProfileOptions(str, Enum):
     return_to_main_menu = 'return_to_main_menu'
     refill_profile = 'refill_profile'
     update_location = 'update_location'
+    continue_ = 'continue'
 
 
 class ProfileAction(CallbackData, prefix='#view_action'):
@@ -56,6 +57,9 @@ def my_profile_keyboard(frozen: bool):
     return InlineConstructor.create_kb(my_profile_actions, [1, 1, 1, 1])
 
 
+continue_actions = [{
+    'text': 'Продолжить', 'cb': ProfileAction(action=ProfileOptions.view_people, value=2)
+}]
 user_profile_keyboard = InlineConstructor.create_kb(user_profile_actions, [1, 1])
 viewing_keyboard = InlineConstructor.create_kb(viewing_actions, [2, 1])
-continue_keyboard = ...
+continue_keyboard = InlineConstructor.create_kb(continue_actions, [1, 1])
