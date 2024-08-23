@@ -3,15 +3,11 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto, Location
 
-from src.database.db import freeze_user, unfreeze_user, \
-    get_nearby_and_same_city_users, calculate_distance, update_user
-from src.database.models import User
-from src.keyboards.questionary import get_location_keyboard
-from src.keyboards.user_profile import *
-from src.states.fsm import Anketa
-from src.utils.validators import validate_city
-from src.handlers.register import ask_age
+from src.database.db import get_nearby_and_same_city_users
 
+from src.keyboards.user_profile import *
+
+from src.utils.misc import PairIterator
 face_picker_router = Router()
 
 
@@ -19,28 +15,16 @@ face_picker_router = Router()
 async def face_picker(call: types.CallbackQuery, state: FSMContext, dbpool):
     data = await state.get_data()
     me = data.get('me')
-    if 'people' not in data or not data['people']:
-        data['people'] = iter(await get_nearby_and_same_city_users(
+    if 'photos' not in data or not data['photos']:
+        data['photos'] = PairIterator(await get_nearby_and_same_city_users(
             dbpool, me.location, 10, me.city, me.looking_for
         ))
     try:
-        booty = next(data['people'])
+        photos = next(data['photos'])
     except StopIteration:
-        data['people'] = iter(await get_nearby_and_same_city_users(
+        data['people'] = PairIterator(await get_nearby_and_same_city_users(
             dbpool, me.location, 10, me.city, me.looking_for
         ))
-        booty = next(data['people'])
-    data = await state.get_data()
-    me = data.get('me')
-    if 'people' not in data or not data['people']:
-        data['people'] = iter(await get_nearby_and_same_city_users(
-            dbpool, me.location, 5, me.city, me.looking_for
-        ))
-    try:
-        booty = next(data['people'])
-    except StopIteration:
-        data['people'] = iter(await get_nearby_and_same_city_users(
-            dbpool, me.location, 5, me.city, me.looking_for
-        ))
-        booty = next(data['people'])
-    media = [InputMediaPhoto(media=booty.photos[0])]
+        photos = next(data['photos'])
+        await state.update_data(photos=data['photos'])
+    media = [InputMediaPhoto(media=photo) for photo in photos]
