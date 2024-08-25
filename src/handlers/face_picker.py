@@ -13,7 +13,7 @@ from src.utils.misc import PairIterator
 face_picker_router = Router()
 
 
-@face_picker_router.callback_query(ProfileOptions.face_picker)
+@face_picker_router.callback_query(ProfileAction.filter(F.action == ProfileOptions.face_picker))
 async def face_picker(call: types.CallbackQuery, state: FSMContext, dbpool, bot: Bot):
     data = await state.get_data()
     me = data.get('me')
