@@ -20,7 +20,7 @@ async def get_or_create_user(session: AsyncSession, user_id: int, username: str)
 
 
 async def get_nearby_users(session: AsyncSession,
-                           location:Location,
+                           location: Location,
                            radius_km: float,
                            gender: Gender):
     target_location = Point(location.longitude, location.latitude)
@@ -63,7 +63,7 @@ async def get_same_city_users(session: AsyncSession,
 
 
 async def get_nearby_and_same_city_users(session: AsyncSession,
-                                         location:Location,
+                                         location: Location,
                                          radius_km: float,
                                          city: str,
                                          gender: Gender):
@@ -113,6 +113,15 @@ async def calculate_distance(session: AsyncSession, user1: User, user2: User) ->
 
     distance = await session.execute(distance_query)
     return distance.scalar()
+
+
+async def get_photos(session: AsyncSession):
+    async with session.begin():
+        result = await session.execute(
+            select(User.photos).limit(200)
+        )
+        photos = result.scalars().all()
+    return photos
 
 
 async def like_user(session: AsyncSession, hunter: User, booty: User):

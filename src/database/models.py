@@ -44,9 +44,3 @@ class User(Base):
     def __repr__(self):
         return f"User(id={self.id}, username={self.username!r})"
 
-
-class Like(Base):
-    __tablename__ = "likes"
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    liker: Mapped[list[int]] = mapped_column(JSON, nullable=True)
-    liked_by: Mapped[list[int]] = mapped_column(JSON, nullable=True)
