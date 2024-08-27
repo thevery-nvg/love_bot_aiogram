@@ -1,8 +1,7 @@
 from aiogram import types, Bot, Router, F
-from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InputMediaPhoto, Location
-from src.keyboards.face_picker_kbd import face_picker_kbd
+from aiogram.types import InputMediaPhoto
+from src.keyboards.face_picker_kbd import face_picker_kbd, FacePickerAction, FacePickerOptions
 
 from src.database.db import get_nearby_and_same_city_users
 
@@ -13,7 +12,9 @@ from src.utils.misc import PairIterator
 face_picker_router = Router()
 
 
-@face_picker_router.callback_query(ProfileAction.filter(F.action == ProfileOptions.face_picker))
+@face_picker_router.callback_query(ProfileAction.filter(F.action == ProfileOptions.face_picker),
+                                   FacePickerAction.filter(F.action == FacePickerOptions.left),
+                                   FacePickerAction.filter(F.action == FacePickerOptions.right))
 async def face_picker(call: types.CallbackQuery, state: FSMContext, dbpool, bot: Bot):
     data = await state.get_data()
     me = data.get('me')
