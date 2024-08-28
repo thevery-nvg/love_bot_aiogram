@@ -13,8 +13,8 @@ main_router = Router()
 @main_router.message(CommandStart())
 async def start(msg: types.Message,
                 bot: Bot,
-                db_pool, state: FSMContext) -> None:
-    me = await get_or_create_user(db_pool, msg.from_user.id, msg.from_user.full_name)
+                dbpool, state: FSMContext) -> None:
+    me = await get_or_create_user(dbpool, msg.from_user.id, msg.from_user.full_name)
     await state.update_data(me=me)
     if me.is_registered:
         await bot.send_message(msg.from_user.id, "Здравствуйте",

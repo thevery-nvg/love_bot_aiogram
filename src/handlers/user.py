@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto, Location
 
 from src.database.db import freeze_user, unfreeze_user, \
-    get_nearby_and_same_city_users, calculate_distance, update_user
+    get_nearby_and_same_city_users, calculate_distance, update_user, get_or_create_user
 from src.database.models import User
 from src.keyboards.questionary import get_location_keyboard
 from src.keyboards.user_profile import *
@@ -169,7 +169,12 @@ async def unfreeze_profile(call: types.CallbackQuery, state: FSMContext, bot: Bo
 
 @registered_user_router.callback_query(
     ProfileAction.filter(F.action == ProfileOptions.return_to_main_menu))
-async def return_to_main_menu(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+async def return_to_main_menu(call: types.CallbackQuery, state: FSMContext,
+                              bot: Bot,
+                              dbpool):
+
+    await state.clear()
+    me = await get_or_create_user(dbpool, call.from_user.id, call.from_user.full_name)
+    await state.update_data(me=me)
     await bot.send_message(call.from_user.id, "Здравствуйте",
                            reply_markup=user_profile_keyboard)
-    await state.set_state(state=None)

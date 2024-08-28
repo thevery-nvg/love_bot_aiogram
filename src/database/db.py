@@ -1,10 +1,12 @@
+from typing import List
+
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import and_
-from src.database.models import User, Gender, Like
-from random import shuffle
+from src.database.models import User, Gender
+from random import shuffle, sample
 from aiogram.types import Location
 from shapely.geometry import Point
 from geoalchemy2.shape import from_shape
@@ -115,10 +117,13 @@ async def calculate_distance(session: AsyncSession, user1: User, user2: User) ->
     return distance.scalar()
 
 
-async def get_photos(session: AsyncSession):
+async def get_random_photos(session: AsyncSession):
     async with session.begin():
+        count = await session.execute(select(User.id))
+        total_count = count.scalar()
+        random_indices = sample(range(total_count), 200)
         result = await session.execute(
-            select(User.photos).limit(200)
+            select(User.photos).where(User.id.in_(random_indices))
         )
         photos = result.scalars().all()
     return photos
