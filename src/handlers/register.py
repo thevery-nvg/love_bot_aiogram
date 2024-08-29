@@ -13,8 +13,9 @@ register_router = Router()
 
 
 @register_router.callback_query(QuestionAction.filter(F.question == Questions.start), Anketa.age)
-async def ask_age(call: types.CallbackQuery, bot: Bot) -> None:
+async def ask_age(call: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
     await bot.send_message(call.from_user.id, "Введите ваш возраст")
+    await state.set_state(Anketa.age)
 
 
 @register_router.message(Anketa.age)
@@ -119,7 +120,7 @@ async def receive_photo(message: types.Message,
     await bot.send_message(message.from_user.id, msg, reply_markup=done_filling_keyboard)
 
 
-@register_router.message(Anketa.photo)
+@register_router.message(Anketa.photo, F.content_type != "photo")
 async def invalid_photo(message: types.Message,
                         bot: Bot) -> None:
     await bot.send_message(message.from_user.id, "Отправьте только фото")
