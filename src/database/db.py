@@ -30,7 +30,7 @@ async def get_nearby_users(session: AsyncSession,
         result = await session.execute(
             select(User).where(
                 and_(
-                    User.frozen == False,
+                    User.frozen is False,
                     User.gender == gender,
                     func.ST_DWithin(
                         User.location,
@@ -51,7 +51,7 @@ async def get_same_city_users(session: AsyncSession,
         result = await session.execute(
             select(User).where(
                 and_(
-                    User.frozen == False,
+                    User.frozen is False,
                     User.gender == gender,
                     User.city == city
                 )
@@ -125,10 +125,6 @@ async def get_random_photos(session: AsyncSession):
         )
         photos = result.scalars().all()
     return photos
-
-
-async def like_user(session: AsyncSession, hunter: User, booty: User):
-    ...
 
 
 async def update_user(session: AsyncSession, user: User, **kwargs) -> User:
