@@ -70,52 +70,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-# @app.on_event("startup")
-# async def on_startup() -> None:
-#     aiogram_session_logger = setup_logger().bind(type="aiogram_session")
-#     session = SmartAiogramAiohttpSession(
-#         json_loads=orjson.loads,
-#         logger=aiogram_session_logger,
-#     )
-#     bot = Bot(token=BOT_TOKEN, session=session, default=DefaultBotProperties(parse_mode='HTML'))
-#     if not REDIS_FSM_ON:
-#         storage = MemoryStorage()
-#     else:
-#         storage = RedisStorage(
-#             redis=Redis(
-#                 host=FSM_HOST,
-#                 password=FSM_PASSWORD,
-#                 port=FSM_PORT,
-#                 db=0,
-#             ))
-#     dp = Dispatcher(bot=bot, storage=storage)
-#     aiogram_session_logger = setup_logger().bind(type="aiogram_session")
-#     dp["aiogram_session_logger"] = aiogram_session_logger
-#
-#     dp.startup.register(aiogram_on_startup_webhook)
-#     dp.shutdown.register(aiogram_on_shutdown_webhook)
-#
-#     bot_state.bot = bot
-#     bot_state.dp = dp
-#     bot_state.scheduler = aiojobs.Scheduler()
-#
-#     await dp.emit_startup()
-#
-#     # await bot_state.scheduler.spawn(background_task())
-#
-#
-# @app.on_event("shutdown")
-# async def on_shutdown() -> None:
-#     dp: Dispatcher = bot_state.dp
-#     await dp.emit_shutdown()
-#     await close_db_connections(dp)
-#     await dp.storage.close()
-#     await bot_state.bot.session.close()
-#     # Остановка планировщика
-#     # if bot_state.scheduler:
-#     #    await bot_state.scheduler.close()
-
-
 @app.post(f"{MAIN_WEBHOOK_ADDRESS}/{BOT_TOKEN}")
 async def telegram_webhook(request: Request, token: str):
     if token != BOT_TOKEN:
