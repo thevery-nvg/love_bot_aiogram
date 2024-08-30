@@ -1,6 +1,9 @@
+import asyncio
+
 from aiogram import types, Bot, Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import CommandStart
+from aiogram.utils.chat_action import ChatActionSender
 
 from src.database.db import get_or_create_user
 from src.keyboards.questionary import *
@@ -27,16 +30,18 @@ async def start(msg: types.Message,
 async def start_filling(call: types.CallbackQuery,
                         state: FSMContext,
                         bot: Bot) -> None:
-    await bot.send_message(call.from_user.id,
-                           "Здравствуйте,вы начинаете заполнение анкеты,\n"
-                           "Вам необходиму будет ответить на несколько вопросов,\n"
-                           "Такие как:\n"
-                           "Возраст\n"
-                           "Пол\n"
-                           "Кого хотите найти\n"
-                           "Ваше расположение\n"
-                           "Ваше имя\n"
-                           "О себе\n"
-                           "Фото(одно или несколько)\n",
-                           reply_markup=start_filling_keyboard)
+    async with ChatActionSender(bot=bot, chat_id=call.message.chat.id):
+        await asyncio.sleep(1)
+        await bot.send_message(call.from_user.id,
+                               "Здравствуйте,вы начинаете заполнение анкеты,\n"
+                               "Вам необходиму будет ответить на несколько вопросов,\n"
+                               "Такие как:\n"
+                               "Возраст\n"
+                               "Пол\n"
+                               "Кого хотите найти\n"
+                               "Ваше расположение\n"
+                               "Ваше имя\n"
+                               "О себе\n"
+                               "Фото(одно или несколько)\n",
+                               reply_markup=start_filling_keyboard)
     await state.set_state(Anketa.age)
